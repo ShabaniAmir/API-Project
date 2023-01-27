@@ -1,0 +1,8 @@
+#!/bin/sh
+
+branch=$(git symbolic-ref HEAD 2> /dev/null | awk 'BEGIN{FS="/"} {print $NF}')
+
+git checkout dev
+git pull origin dev
+git merge $branch
+git push origin dev
