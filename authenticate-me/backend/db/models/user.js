@@ -1,12 +1,13 @@
 "use strict";
 const { Model } = require("sequelize");
 const bcrypt = require("bcryptjs");
+const Validator = require("validator");
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     toSafeObject() {
-      const { id, username, email } = this; // context will be the User instance
-      return { id, username, email };
+      const { id, username, firstName, lastName, email } = this; // context will be the User instance
+      return { id, username, firstName, lastName, email };
     }
     /**
      * Helper method for defining associations.
@@ -37,12 +38,15 @@ module.exports = (sequelize, DataTypes) => {
         return await User.scope("currentUser").findByPk(user.id);
       }
     }
-    static async signup({ username, email, password }) {
+    static async signup({ username, email, password, firstName, lastName }) {
       const hashedPassword = bcrypt.hashSync(password);
+      console.log({ username, email, hashedPassword, firstName, lastName });
       const user = await User.create({
         username,
         email,
         hashedPassword,
+        firstName,
+        lastName,
       });
       return await User.scope("currentUser").findByPk(user.id);
     }
@@ -75,6 +79,20 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         validate: {
           len: [60, 60],
+        },
+      },
+      firstName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          len: [1, 50],
+        },
+      },
+      lastName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          len: [1, 50],
         },
       },
     },
