@@ -93,12 +93,15 @@ router.get("/:id", async (req, res) => {
 router.post("/:id/images", requireAuth, async (req, res) => {
   const { id } = req.params;
   const { url, preview } = req.body;
-  const user = await User.findByPk(req.user.id);
-  const userGroups = await user.getGroups();
-  if (!userGroups.some((group) => group.id === parseInt(id))) {
+
+  const { id: groupId } = req.params;
+  // Get group from database
+  const group = await Group.findByPk(groupId);
+  // Check if logged in user is the organizer of the group
+  if (group.organizerId !== id) {
     return res
       .status(401)
-      .json({ error: "You are not an organizer of this group" });
+      .json({ error: "You are not the organizer of this group" });
   }
   const image = await Image.create({
     url,
