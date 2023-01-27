@@ -11,9 +11,9 @@ router.use(restoreUser);
 
 router.use("/session", sessionRouter);
 
-router.use("/Users", UsersRouter);
+router.use("/users", UsersRouter);
 
-router.use("/Groups", GroupsRouter);
+router.use("/groups", GroupsRouter);
 
 router.post("/test", (req, res) => {
   res.json({ requestBody: req.body });

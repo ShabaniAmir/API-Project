@@ -2,36 +2,22 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Groups", {
+    await queryInterface.createTable("Images", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      organizerId: {
-        type: Sequelize.INTEGER,
-      },
-      name: {
+      url: {
         type: Sequelize.STRING,
       },
-      description: {
-        type: Sequelize.STRING,
-      },
-      type: {
-        type: Sequelize.STRING,
-      },
-      private: {
+      preview: {
         type: Sequelize.BOOLEAN,
       },
-      city: {
-        type: Sequelize.STRING,
-      },
-      state: {
-        type: Sequelize.STRING,
-      },
-      previewImage: {
-        type: Sequelize.STRING,
+      groupId: {
+        type: Sequelize.INTEGER,
+        references: { model: "Groups" },
       },
       createdAt: {
         allowNull: false,
@@ -44,6 +30,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Groups");
+    await queryInterface.dropTable("Images");
   },
 };

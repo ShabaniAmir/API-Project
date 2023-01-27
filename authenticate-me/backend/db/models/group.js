@@ -15,13 +15,21 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "groupId",
         as: "members",
       });
+      models.Group.hasMany(models.Image, {
+        foreignKey: "groupId",
+        as: "GroupImages",
+      });
+      models.Group.belongsTo(models.User, {
+        foreignKey: "organizerId",
+        as: "Organizer",
+      });
     }
   }
   Group.init(
     {
       organizerId: DataTypes.INTEGER,
       name: DataTypes.STRING,
-      about: DataTypes.STRING,
+      description: DataTypes.STRING,
       type: DataTypes.STRING,
       private: DataTypes.BOOLEAN,
       city: DataTypes.STRING,

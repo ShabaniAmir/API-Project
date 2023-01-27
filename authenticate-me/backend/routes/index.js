@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 // config
 const { environment } = require("../config");
+const { requireAuth } = require("../utils/auth");
 
 const apiRouter = require("./api");
 

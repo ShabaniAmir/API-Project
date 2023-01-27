@@ -21,6 +21,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "userId",
         as: "groups",
       });
+      models.User.hasMany(models.Group, {
+        foreignKey: "organizerId",
+        as: "OrganizedGroups",
+      });
     }
 
     validatePassword(password) {
