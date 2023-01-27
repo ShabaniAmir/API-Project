@@ -107,7 +107,6 @@ router.post("/:id/images", requireAuth, async (req, res) => {
   });
   return res.json(image);
 });
-
 // Update Group
 router.put("/:id", [requireAuth, validateGroup], async (req, res) => {
   // Get id of logged in user
@@ -138,6 +137,27 @@ router.put("/:id", [requireAuth, validateGroup], async (req, res) => {
   });
   return res.json({
     group,
+  });
+});
+// Delete Group
+router.delete("/:id", requireAuth, async (req, res) => {
+  // Get id of logged in user
+  const { id } = req.user;
+  // Get group id from request params
+  const { id: groupId } = req.params;
+  // Get group from database
+  const group = await Group.findByPk(groupId);
+  // Check if logged in user is the organizer of the group
+  if (group.organizerId !== id) {
+    return res
+      .status(401)
+      .json({ error: "You are not the organizer of this group" });
+  }
+  // Delete group
+  await group.destroy();
+  return res.json({
+    message: "Successfully deleted",
+    statusCode: 200,
   });
 });
 
