@@ -27,7 +27,15 @@ const setTokenCookie = (res, user) => {
 
 const restoreUser = (req, res, next) => {
   // token parsed from cookies
-  const { token } = req.cookies;
+  let { token } = req.cookies;
+  const headerToken = req.headers.authorization;
+  if (!token) {
+    if (headerToken) {
+      token = headerToken.split(" ")[1];
+    } else {
+      return next();
+    }
+  }
   req.user = null;
 
   return jwt.verify(token, secret, null, async (err, jwtPayload) => {
