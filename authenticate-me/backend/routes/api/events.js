@@ -3,9 +3,10 @@ const router = express.Router({
   mergeParams: true,
 });
 const { Event, Venue, Group } = require("../../db/models");
-const { handleValidationErrors } = require("../utils");
+const { handleValidationErrors } = require("../../utils/validation");
+
 const { check } = require("express-validator");
-const { requireAuth } = require("../../auth");
+const { requireAuth } = require("../../utils/auth");
 
 // Get is handled in index.js
 
@@ -13,7 +14,17 @@ const { requireAuth } = require("../../auth");
 // GET /api/groups/:groupId/events/
 router.get("/", async (req, res, next) => {
   const { groupId } = req.params;
+  if (!groupId) {
+    const err = new Error("Group ID is required");
+    err.status = 400;
+    err.title = "Group ID is required";
+    err.errors = ["Group ID is required"];
+    return next(err);
+  }
   const events = await Event.findAll({
+    where: {
+      groupId,
+    },
     include: [
       {
         model: Venue,
@@ -22,9 +33,6 @@ router.get("/", async (req, res, next) => {
         model: Group,
       },
     ],
-    where: {
-      groupId,
-    },
   });
 
   return res.json(events);
@@ -52,6 +60,85 @@ router.get("/:eventId", async (req, res, next) => {
     ],
   });
 
+  return res.json(event);
+});
+
+// Create an event
+// POST /api/groups/:groupId/events/
+const validateEvent = [
+  check("name")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for name"),
+  check("type")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for type"),
+  check("capacity")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for capacity"),
+  check("description")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for description"),
+  check("startDate")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for startDate"),
+  check("endDate")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for endDate"),
+  check("price")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for price"),
+
+  handleValidationErrors,
+];
+
+router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
+  const { groupId } = req.params;
+  if (!groupId) {
+    const err = new Error("Group ID is required");
+    err.status = 400;
+    err.title = "Group ID is required";
+    err.errors = ["Group ID is required"];
+    return next(err);
+  }
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group not found");
+    err.status = 404;
+    err.title = "Group not found";
+    err.errors = ["Group not found"];
+    return next(err);
+  }
+  const {
+    name,
+    type,
+    capacity,
+    description,
+    startDate,
+    endDate,
+    price,
+    venueId,
+  } = req.body;
+  console.log({
+    name,
+    type,
+    capacity,
+    description,
+    startDate,
+    endDate,
+    price,
+    venueId,
+  });
+  const event = await Event.create({
+    name,
+    type,
+    capacity,
+    description,
+    startDate,
+    endDate,
+    price,
+    groupId,
+    venueId,
+  });
   return res.json(event);
 });
 

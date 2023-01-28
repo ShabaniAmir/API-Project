@@ -12,10 +12,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "groupId",
         as: "Group",
       });
-      models.Venue.belongsTo(models.Event, {
-        foreignKey: "venueId",
-        as: "Event",
-      });
     }
   }
   Venue.init(

@@ -19,10 +19,19 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      capacity: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       name: DataTypes.STRING,
       type: DataTypes.STRING,
       startDate: DataTypes.STRING,
       endDate: DataTypes.STRING,
+      description: DataTypes.STRING,
+      price: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
     },
     {
       sequelize,
