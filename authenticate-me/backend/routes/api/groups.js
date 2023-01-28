@@ -8,7 +8,7 @@ const { User, Group, GroupMember, Image } = require("../../db/models");
 const { check } = require("express-validator");
 const { handleValidationErrors } = require("../../utils/validation");
 const VenuesRouter = require("./venues.js");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const validateGroup = [
   check("name")
@@ -112,7 +112,7 @@ router.post("/:id/images", requireAuth, async (req, res) => {
   return res.json(image);
 });
 // Venue Routes
-router.use("/:id/venues", VenuesRouter);
+router.use("/:groupId/venues", VenuesRouter);
 // Update Group
 router.put("/:id", [requireAuth, validateGroup], async (req, res) => {
   // Get id of logged in user
