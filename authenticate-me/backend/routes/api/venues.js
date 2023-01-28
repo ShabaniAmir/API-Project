@@ -70,4 +70,45 @@ router.post("/", [requireAuth, validateVenue], async (req, res, next) => {
   return res.json(venue);
 });
 
+// Edit a venue
+router.put(
+  "/:venueId",
+  [requireAuth, validateVenue],
+  async (req, res, next) => {
+    // Get venue id from request params
+    const { venueId } = req.params;
+    // Get user
+    const { id: userId } = req.user;
+    // Get venue
+    const venue = await Venue.findByPk(venueId);
+    if (!venue) {
+      const err = new Error("Not Found");
+      err.status = 404;
+      err.title = "Not Found";
+      err.errors = ["Venue not found."];
+      return next(err);
+    }
+    // Check if the group the venue belongs to belongs to the user
+    const group = await Group.findByPk(venue.groupId);
+    if (group.organizerId !== userId) {
+      const err = new Error("Unauthorized");
+      err.status = 401;
+      err.title = "Unauthorized";
+      err.errors = ["You are not authorized to edit this venue."];
+      return next(err);
+    }
+    // Get venue info from request body
+    const { address, city, state, lat, lng } = req.body;
+    // Update venue
+    await venue.update({
+      address,
+      city,
+      state,
+      lat,
+      lng,
+    });
+    return res.json(venue);
+  }
+);
+
 module.exports = router;
