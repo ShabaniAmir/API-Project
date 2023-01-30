@@ -190,4 +190,16 @@ router.delete("/:id", requireAuth, async (req, res) => {
   });
 });
 
+// Get all members of a group
+router.get("/:id/members", async (req, res) => {
+  const { id } = req.params;
+  const members = await GroupMember.findAll({
+    where: {
+      groupId: id,
+    },
+    include: User,
+  });
+  return res.json(members);
+});
+
 module.exports = router;
