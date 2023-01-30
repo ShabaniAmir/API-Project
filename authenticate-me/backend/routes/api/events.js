@@ -387,4 +387,69 @@ router.get("/:eventId/attendees", async (req, res, next) => {
   return res.json(attendees);
 });
 
+// Request to attend an event based on the events id
+// POST /api/groups/:groupId/events/:eventId/attendees
+router.post("/:eventId/attendees", async (req, res, next) => {
+  const { eventId, groupId } = req.params;
+  const { id: userId } = req.user;
+
+  const event = await Event.findByPk(eventId);
+  if (!event) {
+    const err = new Error("Event not found");
+    err.status = 404;
+    err.message = "Event not found";
+
+    return next(err);
+  }
+
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group not found");
+    err.status = 404;
+    err.message = "Group not found";
+
+    return next(err);
+  }
+
+  // Authorization
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId,
+      groupId,
+    },
+  });
+  if (!groupMember) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.message = "Unauthorized";
+
+    return next(err);
+  }
+
+  const eventUser = await EventUser.findOne({
+    where: {
+      userId,
+      eventId,
+    },
+  });
+  if (eventUser && eventUser.status === "pending") {
+    return res.status(400).json({
+      message: "Attendance has already been requested",
+      statusCode: 400,
+    });
+  } else if (eventUser && eventUser.status === "accepted") {
+    return res.status(400).json({
+      message: "User is already an attendee of the event",
+      statusCode: 400,
+    });
+  }
+
+  const newEventUser = await EventUser.create({
+    userId,
+    eventId,
+    status: "pending",
+  });
+
+  return res.json(newEventUser);
+});
 module.exports = router;
