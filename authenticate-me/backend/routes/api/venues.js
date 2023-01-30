@@ -44,15 +44,15 @@ router.post("/", [requireAuth, validateVenue], async (req, res, next) => {
   if (!group) {
     const err = new Error("Not Found");
     err.status = 404;
-    err.title = "Not Found";
-    err.errors = ["Group not found."];
+    err.message = "Not Found";
+
     return next(err);
   }
   if (group.organizerId !== userId) {
     const err = new Error("Unauthorized");
     err.status = 401;
-    err.title = "Unauthorized";
-    err.errors = ["You are not authorized to create a venue for this group."];
+    err.message = "Unauthorized";
+
     return next(err);
   }
 
@@ -84,8 +84,8 @@ router.put(
     if (!venue) {
       const err = new Error("Not Found");
       err.status = 404;
-      err.title = "Not Found";
-      err.errors = ["Venue not found."];
+      err.message = "Not Found";
+
       return next(err);
     }
     // Check if the group the venue belongs to belongs to the user
@@ -93,8 +93,8 @@ router.put(
     if (group.organizerId !== userId) {
       const err = new Error("Unauthorized");
       err.status = 401;
-      err.title = "Unauthorized";
-      err.errors = ["You are not authorized to edit this venue."];
+      err.message = "Unauthorized";
+
       return next(err);
     }
     // Get venue info from request body

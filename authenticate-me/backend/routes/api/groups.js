@@ -116,8 +116,8 @@ router.post("/:id/images", requireAuth, async (req, res) => {
   if (groupMember.role !== "organizer") {
     const err = new Error("Unauthorized");
     err.status = 401;
-    err.title = "Unauthorized";
-    err.errors = ["Unauthorized"];
+    err.message = "Unauthorized";
+
     return next(err);
   }
 
@@ -153,8 +153,8 @@ router.put("/:id", [requireAuth, validateGroup], async (req, res) => {
   if (groupMember.role !== "organizer") {
     const err = new Error("Unauthorized");
     err.status = 401;
-    err.title = "Unauthorized";
-    err.errors = ["Unauthorized"];
+    err.message = "Unauthorized";
+
     return next(err);
   }
 
@@ -184,8 +184,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
   if (group.organizerId !== id) {
     const err = new Error("Unauthorized");
     err.status = 401;
-    err.title = "Unauthorized";
-    err.errors = ["Unauthorized"];
+    err.message = "Unauthorized";
     return next(err);
   }
   // Delete group
@@ -200,6 +199,16 @@ router.delete("/:id", requireAuth, async (req, res) => {
 router.get("/:id/members", async (req, res) => {
   const { id: groupId } = req.params;
   const { id: userId } = req.user;
+
+  // Does group exist
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group not found");
+    err.statusCode = 404;
+    err.message = "Group not found";
+
+    return next(err);
+  }
 
   // is user organizer of group
   const groupMember = await GroupMember.findOne({
@@ -227,6 +236,52 @@ router.get("/:id/members", async (req, res) => {
     });
   }
   return res.json(members);
+});
+
+// Request membership
+router.post("/:id/members", requireAuth, async (req, res) => {
+  const { id: groupId } = req.params;
+  const { id: userId } = req.user;
+
+  // Does group exist
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group not found");
+    err.statusCode = 404;
+    err.message = "Group not found";
+    return next(err);
+  }
+
+  // is user already a member or pending
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId,
+      groupId,
+    },
+  });
+  if (groupMember) {
+    if (groupMember.role === "pending") {
+      //Membership has already been requested
+      const err = new Error("Membership has already been requested");
+      err.statusCode = 400;
+      err.message = "Membership has already been requested";
+      return next(err);
+    } else {
+      // User is already a member of the group
+      const err = new Error("User is already a member of the group");
+      err.statusCode = 400;
+      err.message = "User is already a member of the group";
+      return next(err);
+    }
+  }
+
+  // Create membership
+  const membership = await GroupMember.create({
+    userId,
+    groupId,
+    status: "pending",
+  });
+  return res.json(membership);
 });
 
 module.exports = router;

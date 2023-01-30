@@ -23,8 +23,8 @@ router.get("/", async (req, res, next) => {
   if (!groupId) {
     const err = new Error("Group ID is required");
     err.status = 400;
-    err.title = "Group ID is required";
-    err.errors = ["Group ID is required"];
+    err.message = "Group ID is required";
+
     return next(err);
   }
   const events = await Event.findAll({
@@ -51,8 +51,8 @@ router.get("/:eventId", async (req, res, next) => {
   if (!eventId) {
     const err = new Error("Event ID is required");
     err.status = 400;
-    err.title = "Event ID is required";
-    err.errors = ["Event ID is required"];
+    err.message = "Event ID is required";
+
     return next(err);
   }
   const event = await Event.findByPk(eventId, {
@@ -116,16 +116,16 @@ router.post("/:eventId/images", validateImage, async (req, res, next) => {
   if (!event) {
     const err = new Error("Event not found");
     err.status = 404;
-    err.title = "Event not found";
-    err.errors = ["Event not found"];
+    err.message = "Event not found";
+
     return next(err);
   }
   const group = await Group.findByPk(groupId);
   if (!group) {
     const err = new Error("Group not found");
     err.status = 404;
-    err.title = "Group not found";
-    err.errors = ["Group not found"];
+    err.message = "Group not found";
+
     return next(err);
   }
   // Authorization
@@ -138,8 +138,8 @@ router.post("/:eventId/images", validateImage, async (req, res, next) => {
   if (!groupMember) {
     const err = new Error("Unauthorized");
     err.status = 401;
-    err.title = "Unauthorized";
-    err.errors = ["Unauthorized"];
+    err.message = "Unauthorized";
+
     return next(err);
   }
 
@@ -172,8 +172,8 @@ router.put("/:eventId", validateEvent, async (req, res, next) => {
   if (!event) {
     const err = new Error("Event not found");
     err.status = 404;
-    err.title = "Event not found";
-    err.errors = ["Event not found"];
+    err.message = "Event not found";
+
     return next(err);
   }
 
@@ -181,8 +181,8 @@ router.put("/:eventId", validateEvent, async (req, res, next) => {
   if (!group) {
     const err = new Error("Group not found");
     err.status = 404;
-    err.title = "Group not found";
-    err.errors = ["Group not found"];
+    err.message = "Group not found";
+
     return next(err);
   }
 
@@ -196,8 +196,8 @@ router.put("/:eventId", validateEvent, async (req, res, next) => {
   if (!["organizer", "co-host"].includes(groupMember.role)) {
     const err = new Error("Unauthorized");
     err.status = 401;
-    err.title = "Unauthorized";
-    err.errors = ["Unauthorized"];
+    err.message = "Unauthorized";
+
     return next(err);
   }
 
@@ -224,8 +224,8 @@ router.delete("/:eventId", async (req, res, next) => {
   if (!event) {
     const err = new Error("Event not found");
     err.status = 404;
-    err.title = "Event not found";
-    err.errors = ["Event not found"];
+    err.message = "Event not found";
+
     return next(err);
   }
 
@@ -233,8 +233,8 @@ router.delete("/:eventId", async (req, res, next) => {
   if (!group) {
     const err = new Error("Group not found");
     err.status = 404;
-    err.title = "Group not found";
-    err.errors = ["Group not found"];
+    err.message = "Group not found";
+
     return next(err);
   }
 
@@ -248,8 +248,8 @@ router.delete("/:eventId", async (req, res, next) => {
   if (!["organizer", "co-host"].includes(groupMember.role)) {
     const err = new Error("Unauthorized");
     err.status = 401;
-    err.title = "Unauthorized";
-    err.errors = ["Unauthorized"];
+    err.message = "Unauthorized";
+
     return next(err);
   }
 
@@ -265,16 +265,16 @@ router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
   if (!groupId) {
     const err = new Error("Group ID is required");
     err.statusCode = 400;
-    err.title = "Group ID is required";
-    err.errors = ["Group ID is required"];
+    err.message = "Group ID is required";
+
     return next(err);
   }
   const group = await Group.findByPk(groupId);
   if (!group) {
     const err = new Error("Group not found");
     err.statusCode = 404;
-    err.title = "Group not found";
-    err.errors = ["Group not found"];
+    err.message = "Group not found";
+
     return next(err);
   }
 
@@ -290,8 +290,8 @@ router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
   if (!["organizer", "co-host"].includes(role)) {
     const err = new Error("Unauthorized");
     err.statusCode = 401;
-    err.title = "Unauthorized";
-    err.errors = ["Unauthorized"];
+    err.message = "Unauthorized";
+
     return next(err);
   }
 
