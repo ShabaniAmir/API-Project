@@ -320,4 +320,71 @@ router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
   return res.json(event);
 });
 
+// Get all attendees of an event based on the event's id
+// GET /api/groups/:groupId/events/:eventId/attendees
+router.get("/:eventId/attendees", async (req, res, next) => {
+  const { eventId, groupId } = req.params;
+  const { id: userId } = req.user;
+
+  // Get role of user
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId,
+      groupId,
+    },
+  });
+  if (!groupMember) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.message = "Unauthorized";
+  }
+
+  const event = await Event.findByPk(eventId);
+  if (!event) {
+    const err = new Error("Event not found");
+    err.status = 404;
+    err.message = "Event not found";
+
+    return next(err);
+  }
+
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group not found");
+    err.status = 404;
+    err.message = "Group not found";
+
+    return next(err);
+  }
+
+  if (!["organizer", "co-host"].includes(groupMember.role)) {
+    const attendees = await EventUser.findAll({
+      where: {
+        eventId,
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "firstName", "lastName", "email"],
+        },
+      ],
+    });
+  } else {
+    // All but pending
+    const attendees = await EventUser.findAll({
+      where: {
+        [Op.and]: [{ eventId }, { status: { [Op.ne]: "pending" } }],
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "firstName", "lastName", "email"],
+        },
+      ],
+    });
+  }
+
+  return res.json(attendees);
+});
+
 module.exports = router;
