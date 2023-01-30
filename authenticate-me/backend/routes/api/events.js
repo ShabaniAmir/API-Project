@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router({
   mergeParams: true,
 });
-const { Event, Venue, Group } = require("../../db/models");
+const { Event, Venue, Group, GroupMember } = require("../../db/models");
 const { handleValidationErrors } = require("../../utils/validation");
 
 const { check } = require("express-validator");
@@ -95,7 +95,7 @@ router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
   const { groupId } = req.params;
   if (!groupId) {
     const err = new Error("Group ID is required");
-    err.status = 400;
+    err.statusCode = 400;
     err.title = "Group ID is required";
     err.errors = ["Group ID is required"];
     return next(err);
@@ -103,11 +103,29 @@ router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
   const group = await Group.findByPk(groupId);
   if (!group) {
     const err = new Error("Group not found");
-    err.status = 404;
+    err.statusCode = 404;
     err.title = "Group not found";
     err.errors = ["Group not found"];
     return next(err);
   }
+
+  // Authorization
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId: req.user.id,
+      groupId,
+    },
+  });
+
+  const { role } = groupMember;
+  if (!["organizer", "co-host"].includes(role)) {
+    const err = new Error("Unauthorized");
+    err.statusCode = 401;
+    err.title = "Unauthorized";
+    err.errors = ["Unauthorized"];
+    return next(err);
+  }
+
   const {
     name,
     type,
@@ -118,16 +136,7 @@ router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
     price,
     venueId,
   } = req.body;
-  console.log({
-    name,
-    type,
-    capacity,
-    description,
-    startDate,
-    endDate,
-    price,
-    venueId,
-  });
+
   const event = await Event.create({
     name,
     type,

@@ -63,6 +63,7 @@ router.post("/", [requireAuth, validateGroup], async (req, res) => {
   await GroupMember.create({
     userId: id,
     groupId: group.id,
+    role: "organizer",
   });
 
   return res.json({
@@ -99,12 +100,21 @@ router.post("/:id/images", requireAuth, async (req, res) => {
   const { id: groupId } = req.params;
   // Get group from database
   const group = await Group.findByPk(groupId);
-  // Check if logged in user is the organizer of the group
-  if (group.organizerId !== id) {
-    return res
-      .status(401)
-      .json({ error: "You are not the organizer of this group" });
+  // Authorize user
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId: req.user.id,
+      groupId: id,
+    },
+  });
+  if (groupMember.role !== "organizer") {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.title = "Unauthorized";
+    err.errors = ["Unauthorized"];
+    return next(err);
   }
+
   const image = await Image.create({
     url,
     preview,
@@ -127,13 +137,21 @@ router.put("/:id", [requireAuth, validateGroup], async (req, res) => {
   const { id: groupId } = req.params;
   // Get group from database
   const group = await Group.findByPk(groupId);
-  // Check if logged in user is the organizer of the group
-  if (group.organizerId !== id) {
-    return res
-
-      .status(401)
-      .json({ error: "You are not the organizer of this group" });
+  // Authorize user
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId: req.user.id,
+      groupId: id,
+    },
+  });
+  if (groupMember.role !== "organizer") {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.title = "Unauthorized";
+    err.errors = ["Unauthorized"];
+    return next(err);
   }
+
   // Update group
   await group.update({
     name,
@@ -158,9 +176,11 @@ router.delete("/:id", requireAuth, async (req, res) => {
   const group = await Group.findByPk(groupId);
   // Check if logged in user is the organizer of the group
   if (group.organizerId !== id) {
-    return res
-      .status(401)
-      .json({ error: "You are not the organizer of this group" });
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.title = "Unauthorized";
+    err.errors = ["Unauthorized"];
+    return next(err);
   }
   // Delete group
   await group.destroy();
