@@ -286,6 +286,7 @@ router.post("/:id/members", requireAuth, async (req, res) => {
 });
 
 // Update membership
+// PUT /api/groups/:id/members
 const validateMembershipUpdate = [
   check("memberId")
     .exists({ checkFalsy: true })
@@ -356,6 +357,62 @@ router.put("/:id/members/", requireAuth, async (req, res) => {
     status,
   });
   return res.json(member);
+});
+
+// Delete membership
+// DELETE /api/groups/:id/members
+router.delete("/:id/members", requireAuth, async (req, res) => {
+  const { id: groupId } = req.params;
+  const { id: userId } = req.user;
+  const { memberId } = req.body;
+
+  // Does group exist
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    return res.status(400).json({
+      message: "Group couldn't be found",
+      statusCode: 400,
+    });
+  }
+
+  // Does member exist
+  const member = await GroupMember.findOne({
+    where: {
+      userId: memberId,
+      groupId,
+    },
+  });
+
+  if (!member) {
+    return res.status(400).json({
+      message: "Validation Error",
+      statusCode: 400,
+      errors: {
+        memberId: "User couldn't be found",
+      },
+    });
+  }
+
+  // Authorization
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId,
+      groupId,
+    },
+  });
+  if (groupMember.role !== "organizer" && userId !== memberId) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.message = "Unauthorized";
+
+    return next(err);
+  }
+
+  // Delete membership
+  await member.destroy();
+  return res.json({
+    message: "Successfully deleted membership from group",
+  });
 });
 
 module.exports = router;
