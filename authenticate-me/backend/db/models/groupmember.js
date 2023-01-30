@@ -16,6 +16,16 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: DataTypes.INTEGER,
       groupId: DataTypes.INTEGER,
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "pending",
+      },
+      role: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "member",
+      },
     },
     {
       sequelize,

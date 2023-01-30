@@ -4,7 +4,13 @@ const {
   restoreUser,
   requireAuth,
 } = require("../../utils/auth");
-const { User, Group, GroupMember, Image } = require("../../db/models");
+const {
+  User,
+  Group,
+  GroupMember,
+  Image,
+  Sequelize,
+} = require("../../db/models");
 const { check } = require("express-validator");
 const { handleValidationErrors } = require("../../utils/validation");
 const VenuesRouter = require("./venues.js");
@@ -192,13 +198,34 @@ router.delete("/:id", requireAuth, async (req, res) => {
 
 // Get all members of a group
 router.get("/:id/members", async (req, res) => {
-  const { id } = req.params;
-  const members = await GroupMember.findAll({
+  const { id: groupId } = req.params;
+  const { id: userId } = req.user;
+
+  // is user organizer of group
+  const groupMember = await GroupMember.findOne({
     where: {
-      groupId: id,
+      userId,
+      groupId,
     },
-    include: User,
   });
+  if (groupMember.role !== "organizer") {
+    const members = await GroupMember.findAll({
+      where: {
+        groupId,
+        status: {
+          [Sequelize.Op.not]: "pending",
+        },
+      },
+      include: User,
+    });
+  } else {
+    const members = await GroupMember.findAll({
+      where: {
+        groupId,
+      },
+      include: User,
+    });
+  }
   return res.json(members);
 });
 
