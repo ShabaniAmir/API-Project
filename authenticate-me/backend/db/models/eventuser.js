@@ -14,8 +14,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   EventUser.init(
     {
-      eventId: { type: DataTypes.INTEGER, references: { model: "Events" } },
-      userId: { type: DataTypes.INTEGER, references: { model: "Users" } },
+      eventId: { type: DataTypes.INTEGER, references: { model: "Event" } },
+      userId: { type: DataTypes.INTEGER, references: { model: "User" } },
       status: {
         type: DataTypes.STRING,
         allowNull: false,
