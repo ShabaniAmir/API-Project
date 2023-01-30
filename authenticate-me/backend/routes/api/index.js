@@ -19,7 +19,11 @@ router.use("/groups", GroupsRouter);
 // Get all events
 // GET /api/events
 router.get("/events", async (req, res) => {
-  const events = await Event.findAll();
+  // include groups and venues
+  const events = await Event.findAll({
+    include: ["group", "venue"],
+  });
+
   return res.json(events);
 });
 

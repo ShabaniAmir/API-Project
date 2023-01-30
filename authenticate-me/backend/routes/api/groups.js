@@ -128,6 +128,8 @@ router.post("/:id/images", requireAuth, async (req, res) => {
   });
   return res.json(image);
 });
+// Delete image for group
+
 // Venue Routes
 router.use("/:groupId/venues", VenuesRouter);
 // Event Routes
