@@ -12,6 +12,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "groupId",
         as: "GroupImages",
       });
+      models.Image.belongsTo(models.Event, {
+        foreignKey: "eventId",
+        as: "EventImages",
+      });
+      models.Image.belongsTo(models.Venue, {
+        foreignKey: "venueId",
+        as: "VenueImages",
+      });
     }
   }
   Image.init(
@@ -19,6 +27,14 @@ module.exports = (sequelize, DataTypes) => {
       url: DataTypes.STRING,
       preview: DataTypes.BOOLEAN,
       groupId: DataTypes.INTEGER,
+      eventId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      venueId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       sequelize,

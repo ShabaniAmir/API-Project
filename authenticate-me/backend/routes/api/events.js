@@ -91,6 +91,23 @@ const validateEvent = [
   handleValidationErrors,
 ];
 
+// Add an Image to a Event based on the Event's id
+// POST /api/groups/:groupId/events/:eventId/images
+const validateImage = [
+  check("url")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for url"),
+  check("preview")
+    .exists({ checkFalsy: true })
+    .withMessage("Please provide a value for preview"),
+  handleValidationErrors,
+];
+router.post("/:eventId/images", validateImage, async (req, res, next) => {
+  const { eventId } = req.params;
+  const { url, preview } = req.body;
+  // TODO: Implement image adding
+});
+
 router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
   const { groupId } = req.params;
   if (!groupId) {

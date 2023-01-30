@@ -19,6 +19,16 @@ module.exports = {
         type: Sequelize.INTEGER,
         references: { model: "Groups" },
       },
+      eventId: {
+        type: Sequelize.INTEGER,
+        references: { model: "Events" },
+        allowNull: true,
+      },
+      venueId: {
+        type: Sequelize.INTEGER,
+        references: { model: "Venues" },
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
