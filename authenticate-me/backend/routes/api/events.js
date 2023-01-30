@@ -2,7 +2,13 @@ const express = require("express");
 const router = express.Router({
   mergeParams: true,
 });
-const { Event, Venue, Group, GroupMember } = require("../../db/models");
+const {
+  Event,
+  Venue,
+  Group,
+  GroupMember,
+  EventUser,
+} = require("../../db/models");
 const { handleValidationErrors } = require("../../utils/validation");
 
 const { check } = require("express-validator");
@@ -103,9 +109,48 @@ const validateImage = [
   handleValidationErrors,
 ];
 router.post("/:eventId/images", validateImage, async (req, res, next) => {
-  const { eventId } = req.params;
+  const { eventId, groupId } = req.params;
   const { url, preview } = req.body;
-  // TODO: Implement image adding
+
+  const event = await Event.findByPk(eventId);
+  if (!event) {
+    const err = new Error("Event not found");
+    err.status = 404;
+    err.title = "Event not found";
+    err.errors = ["Event not found"];
+    return next(err);
+  }
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group not found");
+    err.status = 404;
+    err.title = "Group not found";
+    err.errors = ["Group not found"];
+    return next(err);
+  }
+  // Authorization
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId: req.user.id,
+      groupId: event.groupId,
+    },
+  });
+  if (!groupMember) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.title = "Unauthorized";
+    err.errors = ["Unauthorized"];
+    return next(err);
+  }
+
+  const image = await Image.create({
+    url,
+    preview,
+    eventId,
+    groupId,
+  });
+
+  return res.json(image);
 });
 
 router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
