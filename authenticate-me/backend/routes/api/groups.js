@@ -239,6 +239,7 @@ router.get("/:id/members", async (req, res) => {
 });
 
 // Request membership
+// POST /api/groups/:id/members
 router.post("/:id/members", requireAuth, async (req, res) => {
   const { id: groupId } = req.params;
   const { id: userId } = req.user;
@@ -282,6 +283,79 @@ router.post("/:id/members", requireAuth, async (req, res) => {
     status: "pending",
   });
   return res.json(membership);
+});
+
+// Update membership
+const validateMembershipUpdate = [
+  check("memberId")
+    .exists({ checkFalsy: true })
+    .withMessage("Member id is required")
+    .isInt()
+    .withMessage("Member id must be an integer"),
+  check("status")
+    .exists({ checkFalsy: true })
+    .withMessage("Status is required"),
+];
+router.put("/:id/members/", requireAuth, async (req, res) => {
+  const { id: groupId } = req.params;
+  const { id: userId } = req.user;
+  const { memberId, status } = req.body;
+
+  const requiresElevatedPrivileges = status === "co-host";
+
+  // Does group exist
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group couldn't be found");
+    err.statusCode = 404;
+    err.message = "Group couldn't be found";
+    return next(err);
+  }
+
+  // Does member exist
+  const member = await GroupMember.findOne({
+    where: {
+      userId: memberId,
+      groupId,
+    },
+  });
+
+  if (!member) {
+    const err = new Error("User couldn't be found");
+    err.statusCode = 404;
+    err.message = "User couldn't be found";
+    return next(err);
+  }
+
+  // Authorization
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId,
+      groupId,
+    },
+  });
+  if (requiresElevatedPrivileges && groupMember.role !== "organizer") {
+    const err = new Error("Unauthorized");
+    err.statusCode = 401;
+    err.message = "Unauthorized";
+    return next(err);
+  }
+
+  if (
+    !requiresElevatedPrivileges &&
+    ["co-host", "organizer"].includes(groupMember.role)
+  ) {
+    const err = new Error("Unauthorized");
+    err.statusCode = 401;
+    err.message = "Unauthorized";
+    return next(err);
+  }
+
+  // Update membership
+  await member.update({
+    status,
+  });
+  return res.json(member);
 });
 
 module.exports = router;
