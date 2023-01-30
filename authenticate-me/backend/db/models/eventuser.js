@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
     {
       eventId: { type: DataTypes.INTEGER, references: { model: "Events" } },
       userId: { type: DataTypes.INTEGER, references: { model: "Users" } },
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "pending",
+      },
     },
     {
       sequelize,
