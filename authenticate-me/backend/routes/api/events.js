@@ -153,6 +153,68 @@ router.post("/:eventId/images", validateImage, async (req, res, next) => {
   return res.json(image);
 });
 
+// Edit an event based on the event's id
+// PUT /api/groups/:groupId/events/:eventId
+router.put("/:eventId", validateEvent, async (req, res, next) => {
+  const { eventId, groupId } = req.params;
+  const {
+    name,
+    type,
+    capacity,
+    description,
+    startDate,
+    endDate,
+    price,
+    venueId,
+  } = req.body;
+
+  const event = await Event.findByPk(eventId);
+  if (!event) {
+    const err = new Error("Event not found");
+    err.status = 404;
+    err.title = "Event not found";
+    err.errors = ["Event not found"];
+    return next(err);
+  }
+
+  const group = await Group.findByPk(groupId);
+  if (!group) {
+    const err = new Error("Group not found");
+    err.status = 404;
+    err.title = "Group not found";
+    err.errors = ["Group not found"];
+    return next(err);
+  }
+
+  // Authorization
+  const groupMember = await GroupMember.findOne({
+    where: {
+      userId: req.user.id,
+      groupId: event.groupId,
+    },
+  });
+  if (!["organizer", "co-host"].includes(groupMember.role)) {
+    const err = new Error("Unauthorized");
+    err.status = 401;
+    err.title = "Unauthorized";
+    err.errors = ["Unauthorized"];
+    return next(err);
+  }
+
+  await event.update({
+    name,
+    type,
+    capacity,
+    description,
+    startDate,
+    endDate,
+    price,
+    venueId,
+  });
+
+  return res.json(event);
+});
+
 router.post("/", [requireAuth, validateEvent], async (req, res, next) => {
   const { groupId } = req.params;
   if (!groupId) {
