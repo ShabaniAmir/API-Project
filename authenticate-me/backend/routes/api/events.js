@@ -452,4 +452,72 @@ router.post("/:eventId/attendees", async (req, res, next) => {
 
   return res.json(newEventUser);
 });
+
+// Change the status of an attendance for an event specified by id
+// PUT /api/groups/:groupId/events/:eventId/attendees
+router.put(
+  "/:eventId/attendees",
+  [
+    check("userId")
+      .exists({ checkFalsy: true })
+      .withMessage("Please provide a value for userId"),
+    check("status")
+      .exists({ checkFalsy: true })
+      .withMessage("Please provide a value for status"),
+    handleValidationErrors,
+  ],
+  async (req, res, next) => {
+    const { eventId, groupId } = req.params;
+    const { id: userId } = req.user;
+    const { userId: attendeeId, status } = req.body;
+
+    const event = await Event.findByPk(eventId);
+    if (!event) {
+      return res.status(404).json({
+        message: "Event couldn't be found",
+        statusCode: 404,
+      });
+    }
+
+    if (status === "pending") {
+      return res.status(400).json({
+        message: "Cannot change an attendance status to pending",
+        statusCode: 400,
+      });
+    }
+
+    const attendance = await EventUser.findOne({
+      where: {
+        eventId,
+        userId: attendeeId,
+      },
+    });
+    if (!attendance) {
+      return res.status(404).json({
+        message: "Attendance between the user and the event does not exist",
+        statusCode: 404,
+      });
+    }
+
+    // Authorization
+    const groupMember = await GroupMember.findOne({
+      where: {
+        userId,
+        groupId,
+      },
+    });
+    if (!["organizer", "co-host"].includes(groupMember.role)) {
+      return res.status(401).json({
+        message: "Unauthorized",
+        statusCode: 401,
+      });
+    }
+
+    attendance.status = status;
+    await attendance.save();
+
+    return res.json(attendance);
+  }
+);
+
 module.exports = router;
